@@ -35,11 +35,16 @@ export class SeatsGateway {
 
   @SubscribeMessage('updateSeat')
   async update(
-    @MessageBody() updateData: { id: string; seat: UpdateSeatDto },
-  ): Promise<Seat> {
-    const id = updateData.id;
-    const updatedSeatData = updateData.seat;
+    @MessageBody('seat') 
+    seat: UpdateSeatDto,
 
-    return this.seatsService.update(id, updatedSeatData);
+  ): Promise<Seat> {
+    const { id, ...updatedSeatData } = seat; 
+
+    const updatedSeat = await this.seatsService.update(id, updatedSeatData);
+    
+    this.server.emit('findAllSeats', await this.seatsService.findAll());
+
+    return updatedSeat;
   }
 }
