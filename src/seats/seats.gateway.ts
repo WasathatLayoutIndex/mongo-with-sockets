@@ -1,34 +1,45 @@
-import { WebSocketGateway, SubscribeMessage, MessageBody } from '@nestjs/websockets';
+import {
+  WebSocketGateway,
+  SubscribeMessage,
+  MessageBody,
+  WebSocketServer,
+} from '@nestjs/websockets';
 import { SeatsService } from './seats.service';
 import { CreateSeatDto } from './dto/create-seat.dto';
 import { UpdateSeatDto } from './dto/update-seat.dto';
-
+import { Seat } from './schema/seat.schema';
+import { Server } from 'socket.io';
 @WebSocketGateway()
 export class SeatsGateway {
+  @WebSocketServer()
+  server: Server;
+
   constructor(private readonly seatsService: SeatsService) {}
 
   @SubscribeMessage('createSeat')
-  create(@MessageBody() createSeatDto: CreateSeatDto) {
-    return this.seatsService.create(createSeatDto);
+  async create(
+    @MessageBody()
+    seat: CreateSeatDto,
+  ): Promise<Seat> {
+    const newSeat = await this.seatsService.create(seat);
+
+    this.server.emit('findAllSeats', await this.seatsService.findAll());
+
+    return newSeat;
   }
 
   @SubscribeMessage('findAllSeats')
-  findAll() {
+  findAll(): Promise<Seat[]> {
     return this.seatsService.findAll();
   }
 
-  @SubscribeMessage('findOneSeat')
-  findOne(@MessageBody() id: number) {
-    return this.seatsService.findOne(id);
-  }
-
   @SubscribeMessage('updateSeat')
-  update(@MessageBody() updateSeatDto: UpdateSeatDto) {
-    return this.seatsService.update(updateSeatDto.id, updateSeatDto);
-  }
+  async update(
+    @MessageBody() updateData: { id: string; seat: UpdateSeatDto },
+  ): Promise<Seat> {
+    const id = updateData.id;
+    const updatedSeatData = updateData.seat;
 
-  @SubscribeMessage('removeSeat')
-  remove(@MessageBody() id: number) {
-    return this.seatsService.remove(id);
+    return this.seatsService.update(id, updatedSeatData);
   }
 }
