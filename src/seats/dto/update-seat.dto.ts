@@ -1,6 +1,6 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateSeatDto } from './create-seat.dto';
-
-export class UpdateSeatDto extends PartialType(CreateSeatDto) {
-  id: number;
+export class UpdateSeatDto {
+  readonly id: string;
+  readonly name: string;
+  readonly isClicked: boolean;
+  readonly isReserved: boolean;
 }

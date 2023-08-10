@@ -1,26 +1,28 @@
 import { Injectable } from '@nestjs/common';
-import { CreateSeatDto } from './dto/create-seat.dto';
-import { UpdateSeatDto } from './dto/update-seat.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Seat } from './schema/seat.schema';
+import mongoose from 'mongoose';
 
 @Injectable()
 export class SeatsService {
-  create(createSeatDto: CreateSeatDto) {
-    return 'This action adds a new seat';
+  constructor(
+    @InjectModel(Seat.name)
+    private seatModel: mongoose.Model<Seat>,
+  ) {}
+
+  async create(seat: Seat): Promise<Seat> {
+    const res = await this.seatModel.create(seat);
+    return res;
   }
 
-  findAll() {
-    return `This action returns all seats`;
+  async findAll(): Promise<Seat[]> {
+    return await this.seatModel.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} seat`;
-  }
-
-  update(id: number, updateSeatDto: UpdateSeatDto) {
-    return `This action updates a #${id} seat`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} seat`;
+  async update(id: string, seat: Seat): Promise<Seat> {
+    return await this.seatModel.findByIdAndUpdate(id, seat, {
+      new: true,
+      runValidators: true,
+    });
   }
 }
